@@ -22,7 +22,7 @@
     <article class="content-card">
       <p class="eyebrow">Privacy</p>
       <h1>Privacy Policy</h1>
-      <p class="date">Effective Date: June 25, 2026</p>
+      <p class="date">Effective Date: July 2, 2026</p>
 
       <p>MunchGuard ("MunchGuard," "we," "our," or "us") is developed by Haider Ali. This Privacy Policy explains how information is handled when you use the MunchGuard mobile application (the "App"). MunchGuard is a parent-controlled mealtime video app designed for families. <strong>We built it to be private by default: no advertising, no tracking, no developer-operated analytics, and no developer-operated account database.</strong></p>
 
@@ -30,42 +30,45 @@
       <ul>
         <li>MunchGuard's chewing detection and child-facing video experience work on your device. We do not run ads, third-party analytics, or tracking.</li>
         <li>Sign in with Apple is optional. If you choose to use it, your approved library and meal history can be backed up to your personal iCloud account using Apple's CloudKit service.</li>
-        <li>The camera and microphone are used only during a meal session to detect chewing, entirely on-device. Nothing they capture is recorded, saved, or transmitted.</li>
+        <li>The camera and microphone are used during a meal session to detect chewing on-device. Optional Premium meal recording creates a temporary local video/audio file only when a parent turns it on; a parent saves, exports, or discards it after the meal.</li>
         <li>We do not use ads, third-party analytics, advertising identifiers, or cross-app tracking, and we never sell data.</li>
       </ul>
 
       <h2>2. Camera, Microphone, and Motion</h2>
       <p>MunchGuard's core feature is "chew to watch": a video plays while your child is chewing and pauses when they stop. To do this, during an active meal session only:</p>
       <ul>
-        <li><strong>Camera:</strong> the front camera is used with Apple's on-device face/landmark technology to detect jaw and mouth movement. Camera frames are processed live on the device and are never saved, photographed, recorded, or sent anywhere.</li>
-        <li><strong>Microphone:</strong> audio is analyzed on-device for chewing rhythm as a backup when the face is turned away. Audio is never recorded, saved, or transmitted.</li>
+        <li><strong>Camera:</strong> the front camera is used with Apple's on-device TrueDepth/ARKit face tracking on supported devices and Vision face/landmark technology on other devices to detect jaw and mouth movement. Live camera frames are processed on the device for chewing detection and are not sent to us.</li>
+        <li><strong>TrueDepth / face data:</strong> MunchGuard uses transient face-detection status, face confidence, and jaw/mouth movement values such as jaw openness and mouth movement. We do not create a Face ID, faceprint, face template, biometric identity, or child identity profile. These values are used only to decide whether the meal video should keep playing, pause, or show diagnostics during that meal session. They are processed in memory on the device, are not shared with third parties, and are not stored by default.</li>
+        <li><strong>Microphone:</strong> audio is analyzed on-device for chewing rhythm as a backup when the face is turned away. Live chew-audio analysis is not sent to us.</li>
         <li><strong>Motion (optional):</strong> if you use compatible AirPods or Beats, their motion sensors can help detect chewing. These samples are processed on-device and never saved or sent.</li>
       </ul>
-      <p>These sensors are active only while a meal session is running and stop when the session ends or the app leaves the screen.</p>
+      <p>These sensors are active only while a meal session is running and stop when the session ends or the app leaves the screen. If a parent enables optional Premium meal recording, the app records the local camera and microphone streams during that meal into a temporary local file. At the end of the meal, a parent can save/export it or discard it; MunchGuard does not upload it to our servers.</p>
 
       <h2>3. Information Stored on Your Device</h2>
       <p>The following is stored locally on your device so the app can work. It stays on your device and is not uploaded to us:</p>
       <ul>
-        <li>The videos and channels you approve, your app settings (such as meal length and sensitivity), and your selected age range.</li>
+        <li>The exact videos you approve, your app settings (such as meal length and sensitivity), and your selected content type.</li>
         <li>Local meal summaries such as session length, a "mindful" score, and chew streaks.</li>
+        <li>Optional parent voice reminder audio, if you record one.</li>
+        <li>Optional meal recording files, only if a parent enables Premium meal recording, until the parent saves/exports or discards them.</li>
       </ul>
-      <p>You can remove approved videos and channels at any time inside the app. Deleting the App removes all of this local data from your device.</p>
+      <p>You can remove approved videos at any time inside the app. Deleting the App removes local app data from your device.</p>
 
       <h2>4. Optional Sign in with Apple and iCloud Backup</h2>
-      <p>MunchGuard can use Sign in with Apple so a parent can restore family mealtime data across their own Apple devices. If you choose to sign in, the App may store your Sign in with Apple user identifier, approved videos, approved channels, settings, and meal-history summaries in your personal iCloud account through CloudKit. This backup is used only for app functionality and restore/sync. We do not receive your Apple ID password, payment card information, camera footage, microphone audio, or child-facing sensor data.</p>
+      <p>MunchGuard can use Sign in with Apple so a parent can restore family mealtime data across their own Apple devices. If you choose to sign in, the App may store your Sign in with Apple user identifier, approved videos, settings, and meal-history summaries in your personal iCloud account through CloudKit. This backup is used only for app functionality and restore/sync. We do not receive your Apple ID password, payment card information, camera footage, microphone audio, face data, or child-facing sensor data.</p>
       <p>You can use MunchGuard without signing in. You can also delete local app data by removing the App from your device; iCloud data can be managed through your Apple account and iCloud settings.</p>
 
       <h2>5. Information We Do Not Collect</h2>
       <p>MunchGuard does not collect personal information. Specifically:</p>
       <ul>
         <li>No MunchGuard account, separate username, or password is required.</li>
-        <li>We do not collect your name, email address, payment card, camera recordings, microphone recordings, or child biometric profile.</li>
+        <li>We do not receive your name, email address, payment card, camera recordings, microphone recordings, face data, or child biometric profile.</li>
         <li>No advertising identifiers, no third-party advertising, and no third-party analytics SDKs.</li>
         <li>No contact list, photos, browsing history, location, or health data is collected.</li>
       </ul>
 
       <h2>6. Watching YouTube Videos</h2>
-      <p>The videos you approve are played through YouTube's official embedded player using the privacy-enhanced <strong>youtube-nocookie.com</strong> domain. When a video is playing, that playback is delivered by YouTube/Google and is subject to Google's Privacy Policy (<a href="https://policies.google.com/privacy" rel="nofollow noopener">policies.google.com/privacy</a>). MunchGuard does not create a Google account session, does not sign your child in, and does not share any personal information with Google. We use the no-cookie domain specifically to reduce personalization during playback. Because MunchGuard is parent-controlled, children only ever see videos and channels a parent has approved.</p>
+      <p>Parents add exact YouTube video URLs they already choose. MunchGuard does not provide open YouTube search, channel browsing, or a bundled third-party video catalog to children. Approved videos are played through YouTube's official embedded player using the privacy-enhanced <strong>youtube-nocookie.com</strong> domain. When a video is playing, that playback is delivered by YouTube/Google and is subject to Google's Privacy Policy (<a href="https://policies.google.com/privacy" rel="nofollow noopener">policies.google.com/privacy</a>). MunchGuard does not host, download, cache, or redistribute YouTube videos, does not create a Google account session, does not sign your child in, and does not share any personal information with Google. We use the no-cookie domain specifically to reduce personalization during playback.</p>
 
       <h2>7. Children's Privacy</h2>
       <p>MunchGuard is intended to be set up and managed by a parent or guardian and used by children under adult supervision. MunchGuard does <strong>not</strong> knowingly collect personal information from children. Parents control the entire content library. Optional Sign in with Apple and iCloud backup are parent-facing restore features; they are not child accounts.</p>
