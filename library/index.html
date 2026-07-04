@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MunchGuard — Build your library</title>
+  <meta name="description" content="Parent tool: search YouTube and send approved videos to your MunchGuard library.">
+  <link rel="stylesheet" href="../styles.css">
+  <style>
+    .builder { max-width: 920px; margin: 0 auto; }
+    .tabs { display:flex; gap:8px; margin: 8px 0 16px; }
+    .tab { flex:1; padding:12px; border-radius:14px; border:1px solid var(--line);
+      background:var(--card); font-weight:800; cursor:pointer; color:var(--text); }
+    .tab[aria-selected="true"] { background:var(--mint); color:#04231d; border-color:transparent; }
+    .searchrow { display:flex; gap:8px; }
+    .searchrow input { flex:1; padding:14px 16px; border-radius:14px; border:1px solid var(--line);
+      background:var(--card); color:var(--text); font-size:16px; }
+    .searchrow button { padding:14px 20px; border-radius:14px; border:none; background:var(--coral);
+      color:#fff; font-weight:900; cursor:pointer; font-size:16px; }
+    .hint { color:var(--muted); font-size:14px; margin:8px 2px 0; }
+    .grid { display:grid; grid-template-columns:repeat(2, 1fr); gap:14px; margin-top:18px; }
+    @media (max-width:560px){ .grid{ grid-template-columns:1fr; } }
+    .vcard { border:1px solid var(--line); border-radius:16px; overflow:hidden; background:var(--card);
+      display:flex; flex-direction:column; }
+    .vcard .thumb { position:relative; aspect-ratio:16/9; background:#0003; }
+    .vcard .thumb img { width:100%; height:100%; object-fit:cover; display:block; }
+    .vcard .dur { position:absolute; right:6px; bottom:6px; background:#000a; color:#fff;
+      font-size:12px; font-weight:800; padding:2px 6px; border-radius:6px; }
+    .vcard .body { padding:10px 12px; display:flex; flex-direction:column; gap:4px; flex:1; }
+    .vcard .t { font-weight:800; font-size:14px; line-height:1.25; color:var(--text);
+      display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+    .vcard .c { color:var(--muted); font-size:12px; }
+    .vcard .actions { display:flex; gap:8px; padding:0 12px 12px; }
+    .vcard .add { flex:1; padding:9px; border-radius:12px; border:none; background:var(--mint);
+      color:#04231d; font-weight:900; cursor:pointer; }
+    .vcard .add.on { background:#04231d; color:#fff; }
+    .vcard .yt { padding:9px 12px; border-radius:12px; border:1px solid var(--line);
+      background:transparent; color:var(--muted); text-decoration:none; font-weight:800; font-size:12px; }
+    .tray { position:sticky; bottom:0; margin-top:22px; padding:14px; border-radius:16px;
+      background:var(--card); border:1px solid var(--line); box-shadow:var(--shadow);
+      display:flex; align-items:center; gap:12px; }
+    .tray .count { font-weight:900; color:var(--text); }
+    .tray button { margin-left:auto; padding:12px 20px; border-radius:14px; border:none;
+      background:var(--coral); color:#fff; font-weight:900; cursor:pointer; font-size:15px; }
+    .tray button:disabled { opacity:.5; cursor:default; }
+    .modal { position:fixed; inset:0; background:#000b; display:none; align-items:center;
+      justify-content:center; padding:20px; z-index:50; }
+    .modal.open { display:flex; }
+    .sheet { background:var(--bg); border-radius:20px; padding:22px; max-width:360px; text-align:center; }
+    .sheet #qr { display:flex; justify-content:center; margin:14px 0; }
+    .sheet a.open { display:inline-block; margin-top:6px; padding:12px 18px; border-radius:14px;
+      background:var(--mint); color:#04231d; font-weight:900; text-decoration:none; }
+    .sheet button.close { margin-top:14px; background:transparent; border:none; color:var(--muted);
+      font-weight:800; cursor:pointer; }
+    .status { margin-top:14px; color:var(--muted); font-weight:600; }
+    .ytattr { margin-top:18px; color:var(--muted); font-size:12px; text-align:center; }
+  </style>
+</head>
+<body>
+  <header class="shell nav">
+    <a class="brand" href="../" aria-label="MunchGuard home"><span class="mark">MG</span><span>MunchGuard</span></a>
+    <nav class="nav-links" aria-label="Primary navigation">
+      <a href="../privacy-policy/">Privacy</a>
+      <a href="../support/">Support</a>
+      <a href="../terms/">Terms</a>
+    </nav>
+  </header>
+
+  <main class="shell builder">
+    <p class="eyebrow">Parents</p>
+    <h1>Build your library</h1>
+    <p class="lede">Search YouTube or open a playlist, pick the videos you trust, then send them to MunchGuard on your child's device. Your child never sees this page or any search.</p>
+
+    <div class="tabs" role="tablist">
+      <button class="tab" role="tab" aria-selected="true" id="tab-search">Search</button>
+      <button class="tab" role="tab" aria-selected="false" id="tab-playlist">Paste a playlist</button>
+    </div>
+
+    <div id="pane-search">
+      <div class="searchrow">
+        <input id="q" type="search" placeholder="Search YouTube (e.g. counting songs)" autocomplete="off">
+        <button id="q-go">Search</button>
+      </div>
+    </div>
+
+    <div id="pane-playlist" hidden>
+      <div class="searchrow">
+        <input id="pl" type="url" placeholder="Paste a YouTube playlist link" autocomplete="off">
+        <button id="pl-go">Open</button>
+      </div>
+      <p class="hint">The playlist must be public or unlisted. You'll pick which videos to add.</p>
+    </div>
+
+    <div class="status" id="status"></div>
+    <div class="grid" id="grid"></div>
+
+    <div class="ytattr">Search results are provided by YouTube. Tap “Watch on YouTube” to view a video on YouTube.</div>
+  </main>
+
+  <div class="tray" id="tray" hidden>
+    <span class="count" id="count">0 selected</span>
+    <button id="send" disabled>Send to MunchGuard</button>
+  </div>
+
+  <div class="modal" id="modal">
+    <div class="sheet">
+      <h2 style="margin:0 0 6px">Add to MunchGuard</h2>
+      <p style="color:var(--muted); margin:0">On your child's iPhone, open the Camera and scan this code — or tap the button below if you're already on that phone.</p>
+      <div id="qr"></div>
+      <a class="open" id="open" href="#">Open in MunchGuard</a>
+      <div><button class="close" id="close">Done</button></div>
+    </div>
+  </div>
+
+  <footer class="shell footer"><p>Copyright © 2026 Haider Ali. All rights reserved.</p></footer>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script>
+    const PROXY = "https://munchguard-youtube-proxy.munchguard.workers.dev";
+    const selected = new Map(); // videoID -> {id, title}
+    const $ = (id) => document.getElementById(id);
+
+    function setTab(which) {
+      const s = which === "search";
+      $("tab-search").setAttribute("aria-selected", s);
+      $("tab-playlist").setAttribute("aria-selected", !s);
+      $("pane-search").hidden = !s;
+      $("pane-playlist").hidden = s;
+    }
+    $("tab-search").onclick = () => setTab("search");
+    $("tab-playlist").onclick = () => setTab("playlist");
+
+    function setStatus(msg) { $("status").textContent = msg || ""; }
+
+    function playlistIdFromURL(value) {
+      try {
+        const u = new URL(value.trim());
+        return u.searchParams.get("list");
+      } catch { return /^[A-Za-z0-9_-]{12,64}$/.test(value.trim()) ? value.trim() : null; }
+    }
+
+    async function fetchResults(path) {
+      setStatus("Loading…");
+      $("grid").innerHTML = "";
+      try {
+        const res = await fetch(PROXY + path, { headers: { Accept: "application/json" } });
+        const data = await res.json();
+        if (!res.ok) { setStatus(data.message || "Something went wrong."); return; }
+        const items = (data.results || []).filter(r => r.videoID);
+        if (!items.length) { setStatus("No videos found."); return; }
+        setStatus("");
+        renderGrid(items);
+      } catch (e) { setStatus("Network error. Check your connection and try again."); }
+    }
+
+    function renderGrid(items) {
+      const grid = $("grid");
+      grid.innerHTML = "";
+      for (const it of items) {
+        const id = it.videoID;
+        const card = document.createElement("div");
+        card.className = "vcard";
+        const thumb = it.thumbnailURLString || `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
+        card.innerHTML = `
+          <div class="thumb"><img loading="lazy" src="${thumb}" alt="">${it.durationText ? `<span class="dur">${it.durationText}</span>` : ""}</div>
+          <div class="body"><div class="t"></div><div class="c"></div></div>
+          <div class="actions">
+            <button class="add">Add</button>
+            <a class="yt" target="_blank" rel="noopener" href="https://www.youtube.com/watch?v=${id}">Watch on YouTube</a>
+          </div>`;
+        card.querySelector(".t").textContent = it.title || "YouTube video";
+        card.querySelector(".c").textContent = it.channelTitle || it.subtitle || "";
+        const btn = card.querySelector(".add");
+        const sync = () => {
+          const on = selected.has(id);
+          btn.classList.toggle("on", on);
+          btn.textContent = on ? "Added ✓" : "Add";
+        };
+        btn.onclick = () => {
+          if (selected.has(id)) selected.delete(id);
+          else selected.set(id, { id, title: (it.title || "YouTube video").slice(0, 80) });
+          sync(); updateTray();
+        };
+        sync();
+        grid.appendChild(card);
+      }
+    }
+
+    function updateTray() {
+      const n = selected.size;
+      $("tray").hidden = n === 0;
+      $("count").textContent = `${n} selected`;
+      $("send").disabled = n === 0;
+    }
+
+    function buildDeepLink() {
+      const arr = [...selected.values()].slice(0, 40).map(v => ({ v: v.id, t: v.title }));
+      const json = JSON.stringify(arr);
+      const b64 = btoa(unescape(encodeURIComponent(json)))
+        .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+      return "munchguard://import?d=" + b64;
+    }
+
+    $("send").onclick = () => {
+      const link = buildDeepLink();
+      $("open").href = link;
+      $("qr").innerHTML = "";
+      new QRCode($("qr"), { text: link, width: 220, height: 220, correctLevel: QRCode.CorrectLevel.M });
+      $("modal").classList.add("open");
+    };
+    $("close").onclick = () => $("modal").classList.remove("open");
+
+    $("q-go").onclick = () => {
+      const q = $("q").value.trim();
+      if (q.length < 2) { setStatus("Type at least two letters."); return; }
+      fetchResults(`/v1/youtube/search?mode=videos&query=${encodeURIComponent(q)}`);
+    };
+    $("q").addEventListener("keydown", (e) => { if (e.key === "Enter") $("q-go").click(); });
+
+    $("pl-go").onclick = () => {
+      const id = playlistIdFromURL($("pl").value);
+      if (!id) { setStatus("That doesn't look like a playlist link."); return; }
+      fetchResults(`/v1/youtube/playlist/${encodeURIComponent(id)}/items?maxResults=50`);
+    };
+    $("pl").addEventListener("keydown", (e) => { if (e.key === "Enter") $("pl-go").click(); });
+  </script>
+</body>
+</html>
