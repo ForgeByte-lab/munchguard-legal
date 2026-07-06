@@ -4,12 +4,12 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>MunchGuard — Build your library</title>
-  <meta name="description" content="Parent tool: search YouTube and send approved videos to your MunchGuard library.">
+  <meta name="description" content="Parent tool: build your MunchGuard library from your YouTube account, playlists, and links.">
   <link rel="stylesheet" href="../styles.css">
   <style>
     .builder { max-width: 920px; margin: 0 auto; }
-    .tabs { display:flex; gap:8px; margin: 8px 0 16px; }
-    .tab { flex:1; padding:12px; border-radius:14px; border:1px solid var(--line);
+    .tabs { display:flex; gap:8px; margin: 8px 0 16px; flex-wrap:wrap; }
+    .tab { flex:1; min-width:120px; padding:12px; border-radius:14px; border:1px solid var(--line);
       background:var(--card); font-weight:800; cursor:pointer; color:var(--text); }
     .tab[aria-selected="true"] { background:var(--mint); color:#04231d; border-color:transparent; }
     .searchrow { display:flex; gap:8px; }
@@ -24,8 +24,8 @@
       display:flex; flex-direction:column; }
     .vcard .thumb { position:relative; aspect-ratio:16/9; background:#0003; }
     .vcard .thumb img { width:100%; height:100%; object-fit:cover; display:block; }
-    .vcard .dur { position:absolute; right:6px; bottom:6px; background:#000a; color:#fff;
-      font-size:12px; font-weight:800; padding:2px 6px; border-radius:6px; }
+    .vcard .badge { position:absolute; left:6px; top:6px; background:#000a; color:#fff;
+      font-size:11px; font-weight:800; padding:2px 6px; border-radius:6px; }
     .vcard .body { padding:10px 12px; display:flex; flex-direction:column; gap:4px; flex:1; }
     .vcard .t { font-weight:800; font-size:14px; line-height:1.25; color:var(--text);
       display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
@@ -54,6 +54,24 @@
       font-weight:800; cursor:pointer; }
     .status { margin-top:14px; color:var(--muted); font-weight:600; }
     .ytattr { margin-top:18px; color:var(--muted); font-size:12px; text-align:center; }
+    .connect { margin: 8px 0 16px; padding:14px; border-radius:16px; background:var(--card);
+      border:1px solid var(--line); display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+    .connect .lead { flex:1; min-width:200px; color:var(--text); font-weight:700; }
+    .connect .lead small { display:block; color:var(--muted); font-weight:500; font-size:13px; margin-top:2px; }
+    .connect button { padding:12px 18px; border-radius:12px; border:none; background:#1a73e8;
+      color:#fff; font-weight:900; cursor:pointer; font-size:14px; }
+    .connect button.out { background:transparent; color:var(--muted); border:1px solid var(--line); }
+    .picklist { list-style:none; padding:0; margin:0; }
+    .picklist li { padding:12px; border:1px solid var(--line); border-radius:14px;
+      background:var(--card); margin-bottom:10px; display:flex; align-items:center; gap:12px; }
+    .picklist li .thumbmini { width:96px; aspect-ratio:16/9; border-radius:8px; background:#0003;
+      background-size:cover; background-position:center; flex-shrink:0; }
+    .picklist li .info { flex:1; min-width:0; }
+    .picklist li .info .t { font-weight:800; color:var(--text); }
+    .picklist li .info .c { color:var(--muted); font-size:13px; }
+    .picklist li button.add { padding:9px 14px; border-radius:10px; border:none; background:var(--mint);
+      color:#04231d; font-weight:900; cursor:pointer; }
+    .picklist li button.add.on { background:#04231d; color:#fff; }
   </style>
 </head>
 <body>
@@ -69,32 +87,46 @@
   <main class="shell builder">
     <p class="eyebrow">Parents</p>
     <h1>Build your library</h1>
-    <p class="lede">Search YouTube or open a playlist, pick the videos you trust, then send them to MunchGuard on your child's device. Your child never sees this page or any search.</p>
+    <p class="lede">Sign in with your YouTube account to import your own playlists and liked videos, or paste any YouTube link. Pick what you trust, then scan the code from your child's device to add them to MunchGuard. Your child never sees this page.</p>
+
+    <div class="connect" id="connect">
+      <div class="lead">
+        Connect your YouTube
+        <small>Optional: your own playlists and liked videos will appear so you can pick from them. We only read; nothing is written. The token stays in your browser.</small>
+      </div>
+      <button id="signin">Sign in with Google</button>
+      <button id="signout" class="out" hidden>Sign out</button>
+    </div>
 
     <div class="tabs" role="tablist">
-      <button class="tab" role="tab" aria-selected="true" id="tab-search">Search</button>
-      <button class="tab" role="tab" aria-selected="false" id="tab-playlist">Paste a playlist</button>
+      <button class="tab" role="tab" aria-selected="true" id="tab-links">Paste a link</button>
+      <button class="tab" role="tab" aria-selected="false" id="tab-mine" hidden>My playlists</button>
+      <button class="tab" role="tab" aria-selected="false" id="tab-liked" hidden>My liked videos</button>
     </div>
 
-    <div id="pane-search">
+    <div id="pane-links">
       <div class="searchrow">
-        <input id="q" type="search" placeholder="Search YouTube (e.g. counting songs)" autocomplete="off">
-        <button id="q-go">Search</button>
+        <input id="link" type="url" placeholder="Paste a YouTube video or playlist link" autocomplete="off">
+        <button id="link-go">Add</button>
       </div>
+      <p class="hint">Playlist links play the whole list; video links play just that video.</p>
     </div>
 
-    <div id="pane-playlist" hidden>
-      <div class="searchrow">
-        <input id="pl" type="url" placeholder="Paste a YouTube playlist link" autocomplete="off">
-        <button id="pl-go">Open</button>
-      </div>
-      <p class="hint">The playlist must be public or unlisted. You'll pick which videos to add.</p>
+    <div id="pane-mine" hidden>
+      <p class="hint">Your YouTube playlists. Add any playlist your child can safely watch — MunchGuard will play the whole list.</p>
+      <ul class="picklist" id="mine-list"></ul>
+    </div>
+
+    <div id="pane-liked" hidden>
+      <p class="hint">Videos you've liked on YouTube. Pick the ones you want your child to watch.</p>
+      <ul class="picklist" id="liked-list"></ul>
     </div>
 
     <div class="status" id="status"></div>
-    <div class="grid" id="grid"></div>
 
-    <div class="ytattr">Search results are provided by YouTube. Tap “Watch on YouTube” to view a video on YouTube.</div>
+    <div class="ytattr">
+      Videos and playlists are served by YouTube. Tap “Watch on YouTube” to view on YouTube.
+    </div>
   </main>
 
   <div class="tray" id="tray" hidden>
@@ -105,7 +137,7 @@
   <div class="modal" id="modal">
     <div class="sheet">
       <h2 style="margin:0 0 6px">Add to MunchGuard</h2>
-      <p style="color:var(--muted); margin:0">On your child's iPhone, open the Camera and scan this code — or tap the button below if you're already on that phone.</p>
+      <p style="color:var(--muted); margin:0">On your child's iPhone, open the Camera and scan this code — or tap the button if you're on that phone.</p>
       <div id="qr"></div>
       <a class="open" id="open" href="#">Open in MunchGuard</a>
       <div><button class="close" id="close">Done</button></div>
@@ -115,77 +147,45 @@
   <footer class="shell footer"><p>Copyright © 2026 Haider Ali. All rights reserved.</p></footer>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script>
-    const PROXY = "https://munchguard-youtube-proxy.munchguard.workers.dev";
-    const selected = new Map(); // videoID -> {id, title}
+    // ================================================================
+    // MunchGuard "Build your library"
+    // — Google OAuth (client-side, no server, no shared API key)
+    // — Falls back to link paste if the parent doesn't sign in.
+    // — Sends picks to the app via a `munchguard://import` deep link
+    //   whose payload is a base64url JSON array of {v: videoID, t: title}
+    //   or {p: playlistID, t: title}.
+    // ================================================================
+
+    // TODO(user): create an OAuth 2.0 Client ID in Google Cloud Console
+    // with type "Web application", add
+    //   https://forgebyte-lab.github.io
+    // as an Authorized JavaScript origin, then paste the client id here.
+    const GOOGLE_CLIENT_ID = "";
+    const SCOPE = "https://www.googleapis.com/auth/youtube.readonly";
+
+    let accessToken = null;
+    let tokenClient = null;
+    const selected = new Map(); // key -> {kind:'video'|'playlist', id, title}
     const $ = (id) => document.getElementById(id);
 
-    function setTab(which) {
-      const s = which === "search";
-      $("tab-search").setAttribute("aria-selected", s);
-      $("tab-playlist").setAttribute("aria-selected", !s);
-      $("pane-search").hidden = !s;
-      $("pane-playlist").hidden = s;
-    }
-    $("tab-search").onclick = () => setTab("search");
-    $("tab-playlist").onclick = () => setTab("playlist");
-
     function setStatus(msg) { $("status").textContent = msg || ""; }
+    function key(kind, id) { return kind + ":" + id; }
 
-    function playlistIdFromURL(value) {
-      try {
-        const u = new URL(value.trim());
-        return u.searchParams.get("list");
-      } catch { return /^[A-Za-z0-9_-]{12,64}$/.test(value.trim()) ? value.trim() : null; }
-    }
-
-    async function fetchResults(path) {
-      setStatus("Loading…");
-      $("grid").innerHTML = "";
-      try {
-        const res = await fetch(PROXY + path, { headers: { Accept: "application/json" } });
-        const data = await res.json();
-        if (!res.ok) { setStatus(data.message || "Something went wrong."); return; }
-        const items = (data.results || []).filter(r => r.videoID);
-        if (!items.length) { setStatus("No videos found."); return; }
-        setStatus("");
-        renderGrid(items);
-      } catch (e) { setStatus("Network error. Check your connection and try again."); }
-    }
-
-    function renderGrid(items) {
-      const grid = $("grid");
-      grid.innerHTML = "";
-      for (const it of items) {
-        const id = it.videoID;
-        const card = document.createElement("div");
-        card.className = "vcard";
-        const thumb = it.thumbnailURLString || `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
-        card.innerHTML = `
-          <div class="thumb"><img loading="lazy" src="${thumb}" alt="">${it.durationText ? `<span class="dur">${it.durationText}</span>` : ""}</div>
-          <div class="body"><div class="t"></div><div class="c"></div></div>
-          <div class="actions">
-            <button class="add">Add</button>
-            <a class="yt" target="_blank" rel="noopener" href="https://www.youtube.com/watch?v=${id}">Watch on YouTube</a>
-          </div>`;
-        card.querySelector(".t").textContent = it.title || "YouTube video";
-        card.querySelector(".c").textContent = it.channelTitle || it.subtitle || "";
-        const btn = card.querySelector(".add");
-        const sync = () => {
-          const on = selected.has(id);
-          btn.classList.toggle("on", on);
-          btn.textContent = on ? "Added ✓" : "Add";
-        };
-        btn.onclick = () => {
-          if (selected.has(id)) selected.delete(id);
-          else selected.set(id, { id, title: (it.title || "YouTube video").slice(0, 80) });
-          sync(); updateTray();
-        };
-        sync();
-        grid.appendChild(card);
+    // ---------------- Tabs ----------------
+    function setTab(which) {
+      const tabs = ["links", "mine", "liked"];
+      for (const t of tabs) {
+        $("tab-" + t).setAttribute("aria-selected", t === which);
+        $("pane-" + t).hidden = t !== which;
       }
     }
+    $("tab-links").onclick = () => setTab("links");
+    $("tab-mine").onclick = () => { setTab("mine"); if (accessToken) loadMyPlaylists(); };
+    $("tab-liked").onclick = () => { setTab("liked"); if (accessToken) loadMyLiked(); };
 
+    // ---------------- Selection tray ----------------
     function updateTray() {
       const n = selected.size;
       $("tray").hidden = n === 0;
@@ -193,14 +193,17 @@
       $("send").disabled = n === 0;
     }
 
-    function buildDeepLink() {
-      const arr = [...selected.values()].slice(0, 40).map(v => ({ v: v.id, t: v.title }));
-      const json = JSON.stringify(arr);
-      const b64 = btoa(unescape(encodeURIComponent(json)))
+    function b64url(str) {
+      return btoa(unescape(encodeURIComponent(str)))
         .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-      return "munchguard://import?d=" + b64;
     }
-
+    function buildDeepLink() {
+      const arr = [...selected.values()].slice(0, 40).map(item => {
+        const t = (item.title || "").slice(0, 80);
+        return item.kind === "playlist" ? { p: item.id, t } : { v: item.id, t };
+      });
+      return "munchguard://import?d=" + b64url(JSON.stringify(arr));
+    }
     $("send").onclick = () => {
       const link = buildDeepLink();
       $("open").href = link;
@@ -210,19 +213,168 @@
     };
     $("close").onclick = () => $("modal").classList.remove("open");
 
-    $("q-go").onclick = () => {
-      const q = $("q").value.trim();
-      if (q.length < 2) { setStatus("Type at least two letters."); return; }
-      fetchResults(`/v1/youtube/search?mode=videos&query=${encodeURIComponent(q)}`);
+    // ---------------- Paste-a-link tab ----------------
+    function parseYouTube(input) {
+      const value = (input || "").trim();
+      if (!value) return null;
+      try {
+        const u = new URL(value);
+        const list = u.searchParams.get("list");
+        const v = u.searchParams.get("v");
+        // Explicit playlist path wins; otherwise a bare video id in ?v= is a video;
+        // otherwise ?list= means playlist.
+        if (u.pathname.endsWith("/playlist") && list) return { kind: "playlist", id: list };
+        if (v && v.length === 11) return { kind: "video", id: v };
+        // youtu.be/<id>
+        if (u.hostname.endsWith("youtu.be")) {
+          const id = u.pathname.replace(/^\//, "");
+          if (id.length === 11) return { kind: "video", id };
+        }
+        if (list) return { kind: "playlist", id: list };
+      } catch {}
+      // Raw ids
+      if (/^[A-Za-z0-9_-]{11}$/.test(value)) return { kind: "video", id: value };
+      if (/^(PL|UU|FL|LL|RD|OL)[A-Za-z0-9_-]*$/.test(value)) return { kind: "playlist", id: value };
+      return null;
+    }
+    $("link-go").onclick = () => {
+      const parsed = parseYouTube($("link").value);
+      if (!parsed) { setStatus("That doesn't look like a YouTube video or playlist link."); return; }
+      const k = key(parsed.kind, parsed.id);
+      selected.set(k, {
+        kind: parsed.kind,
+        id: parsed.id,
+        title: parsed.kind === "playlist" ? "YouTube playlist" : "YouTube video",
+      });
+      updateTray();
+      setStatus(parsed.kind === "playlist" ? "Playlist added to your picks." : "Video added to your picks.");
+      $("link").value = "";
     };
-    $("q").addEventListener("keydown", (e) => { if (e.key === "Enter") $("q-go").click(); });
+    $("link").addEventListener("keydown", (e) => { if (e.key === "Enter") $("link-go").click(); });
 
-    $("pl-go").onclick = () => {
-      const id = playlistIdFromURL($("pl").value);
-      if (!id) { setStatus("That doesn't look like a playlist link."); return; }
-      fetchResults(`/v1/youtube/playlist/${encodeURIComponent(id)}/items?maxResults=50`);
+    // ---------------- Google sign-in ----------------
+    function afterSignInUI() {
+      $("signin").hidden = true;
+      $("signout").hidden = false;
+      $("tab-mine").hidden = false;
+      $("tab-liked").hidden = false;
+    }
+    function afterSignOutUI() {
+      $("signin").hidden = false;
+      $("signout").hidden = true;
+      $("tab-mine").hidden = true;
+      $("tab-liked").hidden = true;
+      setTab("links");
+    }
+
+    window.addEventListener("load", () => {
+      if (!GOOGLE_CLIENT_ID) {
+        // The parent can still use link-paste; hide sign-in until configured.
+        $("connect").style.display = "none";
+        return;
+      }
+      tokenClient = google.accounts.oauth2.initTokenClient({
+        client_id: GOOGLE_CLIENT_ID,
+        scope: SCOPE,
+        callback: (resp) => {
+          if (resp && resp.access_token) {
+            accessToken = resp.access_token;
+            afterSignInUI();
+            setStatus("Signed in — pick a tab to browse your YouTube.");
+          } else {
+            setStatus("Sign-in did not complete.");
+          }
+        },
+      });
+    });
+
+    $("signin").onclick = () => {
+      if (!tokenClient) { setStatus("Google sign-in isn't set up yet."); return; }
+      tokenClient.requestAccessToken({ prompt: "consent" });
     };
-    $("pl").addEventListener("keydown", (e) => { if (e.key === "Enter") $("pl-go").click(); });
+    $("signout").onclick = () => {
+      if (accessToken && google && google.accounts && google.accounts.oauth2) {
+        google.accounts.oauth2.revoke(accessToken, () => {});
+      }
+      accessToken = null;
+      afterSignOutUI();
+      setStatus("Signed out.");
+    };
+
+    // ---------------- YouTube Data API (as the signed-in user) ----------------
+    async function ytGet(path, params) {
+      const url = new URL("https://www.googleapis.com/youtube/v3/" + path);
+      for (const [k, v] of Object.entries(params || {})) url.searchParams.set(k, String(v));
+      const res = await fetch(url.toString(), { headers: { Authorization: "Bearer " + accessToken } });
+      if (!res.ok) throw new Error("YouTube API error " + res.status);
+      return res.json();
+    }
+
+    async function loadMyPlaylists() {
+      const list = $("mine-list");
+      list.innerHTML = "";
+      setStatus("Loading your playlists…");
+      try {
+        const data = await ytGet("playlists", { part: "snippet,contentDetails", mine: true, maxResults: 50 });
+        setStatus("");
+        for (const it of (data.items || [])) {
+          const id = it.id;
+          const thumb = (it.snippet && it.snippet.thumbnails && (it.snippet.thumbnails.medium || it.snippet.thumbnails.default) || {}).url;
+          const count = (it.contentDetails && it.contentDetails.itemCount) || "?";
+          list.appendChild(pickRow({
+            kind: "playlist", id,
+            title: (it.snippet && it.snippet.title) || "Playlist",
+            subtitle: `${count} videos`, thumb,
+          }));
+        }
+        if (!list.children.length) setStatus("You don't have any playlists yet.");
+      } catch (e) { setStatus("Couldn't load your playlists."); }
+    }
+
+    async function loadMyLiked() {
+      const list = $("liked-list");
+      list.innerHTML = "";
+      setStatus("Loading your liked videos…");
+      try {
+        const data = await ytGet("videos", { part: "snippet", myRating: "like", maxResults: 50 });
+        setStatus("");
+        for (const it of (data.items || [])) {
+          const id = it.id;
+          const thumb = (it.snippet && it.snippet.thumbnails && (it.snippet.thumbnails.medium || it.snippet.thumbnails.default) || {}).url;
+          list.appendChild(pickRow({
+            kind: "video", id,
+            title: (it.snippet && it.snippet.title) || "YouTube video",
+            subtitle: (it.snippet && it.snippet.channelTitle) || "", thumb,
+          }));
+        }
+        if (!list.children.length) setStatus("You haven't liked any videos yet.");
+      } catch (e) { setStatus("Couldn't load your liked videos."); }
+    }
+
+    function pickRow({ kind, id, title, subtitle, thumb }) {
+      const li = document.createElement("li");
+      const k = key(kind, id);
+      li.innerHTML = `
+        <div class="thumbmini"></div>
+        <div class="info"><div class="t"></div><div class="c"></div></div>
+        <button class="add">Add</button>`;
+      if (thumb) li.querySelector(".thumbmini").style.backgroundImage = `url("${thumb}")`;
+      li.querySelector(".t").textContent = title;
+      li.querySelector(".c").textContent = kind === "playlist" ? "Playlist · " + (subtitle || "") : (subtitle || "");
+      const btn = li.querySelector(".add");
+      const sync = () => {
+        const on = selected.has(k);
+        btn.classList.toggle("on", on);
+        btn.textContent = on ? "Added ✓" : "Add";
+      };
+      btn.onclick = () => {
+        if (selected.has(k)) selected.delete(k);
+        else selected.set(k, { kind, id, title });
+        sync(); updateTray();
+      };
+      sync();
+      return li;
+    }
   </script>
 </body>
 </html>
