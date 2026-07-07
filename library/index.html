@@ -59,6 +59,10 @@
       font-size:11px; letter-spacing:0.02em; vertical-align:middle; }
     .premium-note { display:block; color:#8f5be0; font-weight:800; font-size:13px;
       margin-bottom:8px; text-align:center; }
+    /* Ensure the `hidden` HTML attribute wins over explicit display rules
+       above (.tray uses display:flex, .premium-note uses display:block, which
+       would otherwise override the user-agent [hidden]{display:none}). */
+    [hidden] { display: none !important; }
     .connect { margin: 8px 0 16px; padding:14px; border-radius:16px; background:var(--card);
       border:1px solid var(--line); display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
     .connect .lead { flex:1; min-width:200px; color:var(--text); font-weight:700; }
