@@ -63,6 +63,10 @@
        above (.tray uses display:flex, .premium-note uses display:block, which
        would otherwise override the user-agent [hidden]{display:none}). */
     [hidden] { display: none !important; }
+    .app-first { margin: 4px 0 14px; padding:12px 14px; border-radius:14px;
+      background:rgba(90,200,160,0.12); border:1px solid rgba(90,200,160,0.35);
+      color:var(--text); font-size:14px; line-height:1.45; }
+    .app-first strong { color:var(--text); }
     .connect { margin: 8px 0 16px; padding:14px; border-radius:16px; background:var(--card);
       border:1px solid var(--line); display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
     .connect .lead { flex:1; min-width:200px; color:var(--text); font-weight:700; }
@@ -97,6 +101,10 @@
     <p class="eyebrow">Parents</p>
     <h1>Build your library</h1>
     <p class="lede">Paste a single YouTube video link — that's free with MunchGuard. To import your own YouTube playlists and liked videos, or to add a whole playlist link at once, you'll need <strong>MunchGuard Premium</strong> in the app. Pick what you trust, then scan the code from your child's device. Your child never sees this page.</p>
+
+    <aside class="app-first" role="note">
+      <strong>New: connect right inside the app.</strong> MunchGuard Premium can now sign in to your YouTube account on your device — open <em>Parent&nbsp;Dashboard → Library → “Connect your YouTube account.”</em> This page stays here as a big-screen alternative and works the same way.
+    </aside>
 
     <div class="connect" id="connect">
       <div class="lead">
