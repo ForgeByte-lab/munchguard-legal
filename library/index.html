@@ -54,6 +54,11 @@
       font-weight:800; cursor:pointer; }
     .status { margin-top:14px; color:var(--muted); font-weight:600; }
     .ytattr { margin-top:18px; color:var(--muted); font-size:12px; text-align:center; }
+    .badge-premium { display:inline-block; padding:2px 8px; border-radius:999px;
+      background:rgba(180,140,255,0.20); color:#8f5be0; font-weight:900;
+      font-size:11px; letter-spacing:0.02em; vertical-align:middle; }
+    .premium-note { display:block; color:#8f5be0; font-weight:800; font-size:13px;
+      margin-bottom:8px; text-align:center; }
     .connect { margin: 8px 0 16px; padding:14px; border-radius:16px; background:var(--card);
       border:1px solid var(--line); display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
     .connect .lead { flex:1; min-width:200px; color:var(--text); font-weight:700; }
@@ -87,12 +92,12 @@
   <main class="shell builder">
     <p class="eyebrow">Parents</p>
     <h1>Build your library</h1>
-    <p class="lede">Sign in with your YouTube account to import your own playlists and liked videos, or paste any YouTube link. Pick what you trust, then scan the code from your child's device to add them to MunchGuard. Your child never sees this page.</p>
+    <p class="lede">Paste a single YouTube video link — that's free with MunchGuard. To import your own YouTube playlists and liked videos, or to add a whole playlist link at once, you'll need <strong>MunchGuard Premium</strong> in the app. Pick what you trust, then scan the code from your child's device. Your child never sees this page.</p>
 
     <div class="connect" id="connect">
       <div class="lead">
-        Connect your YouTube
-        <small>Optional: your own playlists and liked videos will appear so you can pick from them. We only read; nothing is written. The token stays in your browser.</small>
+        Connect your YouTube <span class="badge-premium">Premium</span>
+        <small>Importing from your YouTube account is a MunchGuard Premium feature — you'll be prompted to subscribe in the app when you send these picks over. We only read; nothing is written. The token stays in your browser.</small>
       </div>
       <button id="signin">Sign in with Google</button>
       <button id="signout" class="out" hidden>Sign out</button>
@@ -100,25 +105,25 @@
 
     <div class="tabs" role="tablist">
       <button class="tab" role="tab" aria-selected="true" id="tab-links">Paste a link</button>
-      <button class="tab" role="tab" aria-selected="false" id="tab-mine" hidden>My playlists</button>
-      <button class="tab" role="tab" aria-selected="false" id="tab-liked" hidden>My liked videos</button>
+      <button class="tab" role="tab" aria-selected="false" id="tab-mine" hidden>My playlists <span class="badge-premium">Premium</span></button>
+      <button class="tab" role="tab" aria-selected="false" id="tab-liked" hidden>My liked videos <span class="badge-premium">Premium</span></button>
     </div>
 
     <div id="pane-links">
       <div class="searchrow">
-        <input id="link" type="url" placeholder="Paste a YouTube video or playlist link" autocomplete="off">
+        <input id="link" type="url" placeholder="Paste a YouTube video link (free) — playlists are Premium" autocomplete="off">
         <button id="link-go">Add</button>
       </div>
-      <p class="hint">Playlist links play the whole list; video links play just that video.</p>
+      <p class="hint">Single video links are free. Playlist links play the whole list and require <strong>MunchGuard Premium</strong> in the app.</p>
     </div>
 
     <div id="pane-mine" hidden>
-      <p class="hint">Your YouTube playlists. Add any playlist your child can safely watch — MunchGuard will play the whole list.</p>
+      <p class="hint"><strong>Premium</strong> — Your YouTube playlists. Add any playlist your child can safely watch; MunchGuard will play the whole list. Requires an active MunchGuard Premium subscription in the app.</p>
       <ul class="picklist" id="mine-list"></ul>
     </div>
 
     <div id="pane-liked" hidden>
-      <p class="hint">Videos you've liked on YouTube. Pick the ones you want your child to watch.</p>
+      <p class="hint"><strong>Premium</strong> — Videos you've liked on YouTube. Pick the ones you want your child to watch. Requires MunchGuard Premium in the app.</p>
       <ul class="picklist" id="liked-list"></ul>
     </div>
 
@@ -130,7 +135,10 @@
   </main>
 
   <div class="tray" id="tray" hidden>
-    <span class="count" id="count">0 selected</span>
+    <div style="display:flex; flex-direction:column; gap:6px; flex:1;">
+      <span id="tray-premium-note" class="premium-note" hidden>Includes Premium items — you'll be asked to start a free trial in the app.</span>
+      <span class="count" id="count">0 selected</span>
+    </div>
     <button id="send" disabled>Send to MunchGuard</button>
   </div>
 
@@ -138,6 +146,7 @@
     <div class="sheet">
       <h2 style="margin:0 0 6px">Add to MunchGuard</h2>
       <p style="color:var(--muted); margin:0">On your child's iPhone, open the Camera and scan this code — or tap the button if you're on that phone.</p>
+      <p id="modal-premium-note" hidden class="premium-note" style="margin:12px 0 0">Your picks include Premium items — MunchGuard will offer to start a free trial before importing them.</p>
       <div id="qr"></div>
       <a class="open" id="open" href="#">Open in MunchGuard</a>
       <div><button class="close" id="close">Done</button></div>
@@ -158,11 +167,14 @@
     //   or {p: playlistID, t: title}.
     // ================================================================
 
-    // TODO(user): create an OAuth 2.0 Client ID in Google Cloud Console
-    // with type "Web application", add
-    //   https://forgebyte-lab.github.io
-    // as an Authorized JavaScript origin, then paste the client id here.
-    const GOOGLE_CLIENT_ID = "";
+    // OAuth 2.0 Client ID for the MunchGuard parent web dashboard.
+    // Google Cloud project: muchguard-youtube. Authorized JavaScript origin:
+    // https://forgebyte-lab.github.io. Consent screen is currently in
+    // "Testing" mode (100-user cap; add real users via the Google Cloud
+    // Console → APIs & Services → Audience → Test users), which is fine
+    // while MunchGuard Premium's OAuth import is a beta feature. Submit for
+    // Google's OAuth app verification before promoting broadly.
+    const GOOGLE_CLIENT_ID = "389376730197-nt1uihg0nks03krdo34cr6t1f3vig6p8.apps.googleusercontent.com";
     const SCOPE = "https://www.googleapis.com/auth/youtube.readonly";
 
     let accessToken = null;
@@ -186,11 +198,21 @@
     $("tab-liked").onclick = () => { setTab("liked"); if (accessToken) loadMyLiked(); };
 
     // ---------------- Selection tray ----------------
+    function selectionHasPremiumItems() {
+      for (const item of selected.values()) {
+        if (item.kind === "playlist" || item.source === "oauth") return true;
+      }
+      return false;
+    }
+
     function updateTray() {
       const n = selected.size;
       $("tray").hidden = n === 0;
       $("count").textContent = `${n} selected`;
       $("send").disabled = n === 0;
+      const hasPremium = selectionHasPremiumItems();
+      $("tray-premium-note").hidden = !hasPremium;
+      $("modal-premium-note").hidden = !hasPremium;
     }
 
     function b64url(str) {
@@ -244,10 +266,13 @@
       selected.set(k, {
         kind: parsed.kind,
         id: parsed.id,
+        source: "paste",
         title: parsed.kind === "playlist" ? "YouTube playlist" : "YouTube video",
       });
       updateTray();
-      setStatus(parsed.kind === "playlist" ? "Playlist added to your picks." : "Video added to your picks.");
+      setStatus(parsed.kind === "playlist"
+        ? "Playlist added to your picks — playing whole playlists is a Premium feature in the app."
+        : "Video added to your picks.");
       $("link").value = "";
     };
     $("link").addEventListener("keydown", (e) => { if (e.key === "Enter") $("link-go").click(); });
@@ -369,7 +394,7 @@
       };
       btn.onclick = () => {
         if (selected.has(k)) selected.delete(k);
-        else selected.set(k, { kind, id, title });
+        else selected.set(k, { kind, id, title, source: "oauth" });
         sync(); updateTray();
       };
       sync();
