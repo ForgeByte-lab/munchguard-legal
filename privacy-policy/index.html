@@ -22,7 +22,7 @@
     <article class="content-card">
       <p class="eyebrow">Privacy</p>
       <h1>Privacy Policy</h1>
-      <p class="date">Effective Date: July 9, 2026</p>
+      <p class="date">Effective Date: July 11, 2026</p>
 
       <p>MunchGuard ("MunchGuard," "we," "our," or "us") is developed by Haider Ali. This Privacy Policy explains how information is handled when you use the MunchGuard mobile application (the "App"). MunchGuard is a parent-controlled mealtime video app designed for families. <strong>We built it to be private by default: no advertising, no tracking, no developer-operated analytics, and no developer-operated account database.</strong></p>
 
@@ -31,18 +31,20 @@
         <li>MunchGuard's chewing detection and child-facing video experience work on your device. We do not run ads, third-party analytics, or tracking.</li>
         <li>Sign in with Apple is optional. If you choose to use it, your approved library and meal history can be backed up to your personal iCloud account using Apple's CloudKit service.</li>
         <li>The camera and microphone are used during a meal session to detect chewing on-device. Chew-detection camera and microphone signals are not recorded or uploaded to us.</li>
+        <li>A Premium parent can optionally create one private local meal recording with camera video and microphone sound. The App verifies it after the meal, then the parent saves it to Photos or discards it. MunchGuard does not upload the recording.</li>
         <li>We do not use ads, third-party analytics, advertising identifiers, or cross-app tracking, and we never sell data.</li>
       </ul>
 
       <h2>2. Camera, Microphone, and Motion</h2>
       <p>MunchGuard's core feature is "chew to watch": a video plays while your child is chewing and pauses when they stop. To do this, during an active meal session only:</p>
       <ul>
-        <li><strong>Camera:</strong> the front camera is used with Apple's on-device TrueDepth/ARKit face tracking on supported devices and Vision face/landmark technology on other devices to detect jaw and mouth movement. Live camera frames are processed on the device for chewing detection and are not recorded or sent to us.</li>
+        <li><strong>Camera:</strong> the front camera is used with Apple's on-device TrueDepth/ARKit face tracking on supported devices and Vision face/landmark technology on other devices to detect jaw and mouth movement. Live camera frames are processed on the device and are not sent to us. If a Premium parent enables meal recording, the same local camera session creates the temporary movie described below.</li>
         <li><strong>TrueDepth / face data:</strong> Live chew-detection signals are processed on the device during an active meal session. MunchGuard does not create a faceprint, biometric identifier, or child identity profile. We do not receive or store live TrueDepth values, face confidence, jaw openness, mouth movement, or chewing rhythm data. These transient values are used only to decide whether the meal video should keep playing, pause, or show diagnostics during that meal session. They are processed in memory on the device, are not shared with third parties, and are not stored.</li>
-        <li><strong>Microphone:</strong> audio is analyzed on-device for chewing rhythm as a backup when the face is turned away. Live chew-audio analysis is not recorded or sent to us.</li>
+        <li><strong>Microphone:</strong> audio is analyzed on-device for chewing rhythm as a backup when the face is turned away and is not sent to us. During an optional Premium meal recording, microphone sound is included in the temporary local movie.</li>
         <li><strong>Motion (optional):</strong> if you use compatible AirPods or Beats, their motion sensors can help detect chewing. These samples are processed on-device and never saved or sent.</li>
       </ul>
       <p>These sensors are active only while a meal session is running and stop when the session ends or the app leaves the screen.</p>
+      <p><strong>Optional Premium meal recording:</strong> When a parent turns this setting on, MunchGuard uses one native on-device camera and microphone session for the meal. Vision chewing detection receives frames from that same camera session. After the meal, the App checks that the local movie contains video, a microphone audio track, the expected duration, and the expected orientation. The parent must then save the file to Photos or discard it. The temporary file is not uploaded to MunchGuard, third parties, or iCloud by the App.</p>
 
       <h2>3. Information Stored on Your Device</h2>
       <p>The following is stored locally on your device so the app can work. It stays on your device and is not uploaded to us:</p>
@@ -50,6 +52,7 @@
         <li>The exact videos and playlists you approve, your app settings (such as meal length and sensitivity), and your selected content type.</li>
         <li>Local meal summaries such as session length, a "mindful" score, and chew streaks.</li>
         <li>Optional parent voice reminder audio, if you record one.</li>
+        <li>An optional Premium meal recording, kept temporarily until a parent saves it to Photos or discards it.</li>
         <li>Video links a parent shares to MunchGuard from another app (for example via the YouTube app or Safari share sheet) are held briefly in the app's private on-device container until MunchGuard imports them into the approved library. They are not sent to us.</li>
         <li>Video links a parent sends from the public web library dashboard back into the app require parent approval in the app before they are added to Kid Mode.</li>
       </ul>
