@@ -100,26 +100,11 @@
   <main class="shell builder">
     <p class="eyebrow">Parents</p>
     <h1>Build your library</h1>
-    <p class="lede">Paste a single YouTube video link — that's free with MunchGuard. To import your own YouTube playlists and liked videos, or to add a whole playlist link at once, you'll need <strong>MunchGuard Premium</strong> in the app. Pick what you trust, then scan the code from your child's device. In the app, imports are added to the selected child's library so siblings can have different approved videos and playlists. Approved playlists stay synced when you update them on YouTube. Your child never sees this page.</p>
+    <p class="lede">Paste a YouTube video or playlist link, pick what you trust, then scan the code from your child's device. Single-video imports are free; whole playlists require <strong>MunchGuard Premium</strong> in the app. Imports are added to the selected child's library so siblings can have different approved videos and playlists. Your child never sees this page.</p>
 
     <aside class="app-first" role="note">
-      <strong>New: connect right inside the app.</strong> MunchGuard Premium can now sign in to your YouTube account on your device — open <em>Parent&nbsp;Dashboard → Library → “Connect your YouTube account.”</em> This page stays here as a big-screen alternative and works the same way.
+      <strong>Connect securely inside the app.</strong> To import your own YouTube playlists and liked videos, open <em>Parent&nbsp;Dashboard → Library → “Connect your YouTube account.”</em> MunchGuard requests read-only access, and the token stays in your device Keychain. This web page does not sign in to Google.
     </aside>
-
-    <div class="connect" id="connect">
-      <div class="lead">
-        Connect your YouTube <span class="badge-premium">Premium</span>
-        <small>Importing from your YouTube account is a MunchGuard Premium feature — you'll be prompted to subscribe in the app when you send these picks over. We only read; nothing is written. The token stays in your browser.</small>
-      </div>
-      <button id="signin">Sign in with Google</button>
-      <button id="signout" class="out" hidden>Sign out</button>
-    </div>
-
-    <div class="tabs" role="tablist">
-      <button class="tab" role="tab" aria-selected="true" id="tab-links">Paste a link</button>
-      <button class="tab" role="tab" aria-selected="false" id="tab-mine" hidden>My playlists <span class="badge-premium">Premium</span></button>
-      <button class="tab" role="tab" aria-selected="false" id="tab-liked" hidden>My liked videos <span class="badge-premium">Premium</span></button>
-    </div>
 
     <div id="pane-links">
       <div class="searchrow">
@@ -127,16 +112,6 @@
         <button id="link-go">Add</button>
       </div>
       <p class="hint">Single video links are free. Playlist links play the whole list and require <strong>MunchGuard Premium</strong> in the app.</p>
-    </div>
-
-    <div id="pane-mine" hidden>
-      <p class="hint"><strong>Premium</strong> — Your YouTube playlists. Add any playlist your child can safely watch; MunchGuard will play the whole list. Requires an active MunchGuard Premium subscription in the app.</p>
-      <ul class="picklist" id="mine-list"></ul>
-    </div>
-
-    <div id="pane-liked" hidden>
-      <p class="hint"><strong>Premium</strong> — Videos you've liked on YouTube. Pick the ones you want your child to watch. Requires MunchGuard Premium in the app.</p>
-      <ul class="picklist" id="liked-list"></ul>
     </div>
 
     <div class="status" id="status"></div>
@@ -168,51 +143,25 @@
   <footer class="shell footer"><p>Copyright © 2026 Haider Ali. All rights reserved.</p></footer>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script>
     // ================================================================
     // MunchGuard "Build your library"
-    // — Google OAuth (client-side, no server, no shared API key)
-    // — Falls back to link paste if the parent doesn't sign in.
+    // — Link paste only; Google account connection happens in the iOS app.
     // — Sends picks to the app via a `munchguard://import` deep link
     //   whose payload is a base64url JSON array of {v: videoID, t: title}
     //   or {p: playlistID, t: title}.
     // ================================================================
 
-    // OAuth 2.0 Client ID for the MunchGuard parent web dashboard.
-    // Google Cloud project: muchguard-youtube. Authorized JavaScript origin:
-    // https://forgebyte-lab.github.io. Consent screen is currently in
-    // "Testing" mode (100-user cap; add real users via the Google Cloud
-    // Console → APIs & Services → Audience → Test users), which is fine
-    // while MunchGuard Premium's OAuth import is a beta feature. Submit for
-    // Google's OAuth app verification before promoting broadly.
-    const GOOGLE_CLIENT_ID = "389376730197-nt1uihg0nks03krdo34cr6t1f3vig6p8.apps.googleusercontent.com";
-    const SCOPE = "https://www.googleapis.com/auth/youtube.readonly";
-
-    let accessToken = null;
-    let tokenClient = null;
     const selected = new Map(); // key -> {kind:'video'|'playlist', id, title}
     const $ = (id) => document.getElementById(id);
 
     function setStatus(msg) { $("status").textContent = msg || ""; }
     function key(kind, id) { return kind + ":" + id; }
 
-    // ---------------- Tabs ----------------
-    function setTab(which) {
-      const tabs = ["links", "mine", "liked"];
-      for (const t of tabs) {
-        $("tab-" + t).setAttribute("aria-selected", t === which);
-        $("pane-" + t).hidden = t !== which;
-      }
-    }
-    $("tab-links").onclick = () => setTab("links");
-    $("tab-mine").onclick = () => { setTab("mine"); if (accessToken) loadMyPlaylists(); };
-    $("tab-liked").onclick = () => { setTab("liked"); if (accessToken) loadMyLiked(); };
-
     // ---------------- Selection tray ----------------
     function selectionHasPremiumItems() {
       for (const item of selected.values()) {
-        if (item.kind === "playlist" || item.source === "oauth") return true;
+        if (item.kind === "playlist") return true;
       }
       return false;
     }
@@ -289,129 +238,6 @@
     };
     $("link").addEventListener("keydown", (e) => { if (e.key === "Enter") $("link-go").click(); });
 
-    // ---------------- Google sign-in ----------------
-    function afterSignInUI() {
-      $("signin").hidden = true;
-      $("signout").hidden = false;
-      $("tab-mine").hidden = false;
-      $("tab-liked").hidden = false;
-    }
-    function afterSignOutUI() {
-      $("signin").hidden = false;
-      $("signout").hidden = true;
-      $("tab-mine").hidden = true;
-      $("tab-liked").hidden = true;
-      setTab("links");
-    }
-
-    window.addEventListener("load", () => {
-      if (!GOOGLE_CLIENT_ID) {
-        // The parent can still use link-paste; hide sign-in until configured.
-        $("connect").style.display = "none";
-        return;
-      }
-      tokenClient = google.accounts.oauth2.initTokenClient({
-        client_id: GOOGLE_CLIENT_ID,
-        scope: SCOPE,
-        callback: (resp) => {
-          if (resp && resp.access_token) {
-            accessToken = resp.access_token;
-            afterSignInUI();
-            setStatus("Signed in — pick a tab to browse your YouTube.");
-          } else {
-            setStatus("Sign-in did not complete.");
-          }
-        },
-      });
-    });
-
-    $("signin").onclick = () => {
-      if (!tokenClient) { setStatus("Google sign-in isn't set up yet."); return; }
-      tokenClient.requestAccessToken({ prompt: "consent" });
-    };
-    $("signout").onclick = () => {
-      if (accessToken && google && google.accounts && google.accounts.oauth2) {
-        google.accounts.oauth2.revoke(accessToken, () => {});
-      }
-      accessToken = null;
-      afterSignOutUI();
-      setStatus("Signed out.");
-    };
-
-    // ---------------- YouTube Data API (as the signed-in user) ----------------
-    async function ytGet(path, params) {
-      const url = new URL("https://www.googleapis.com/youtube/v3/" + path);
-      for (const [k, v] of Object.entries(params || {})) url.searchParams.set(k, String(v));
-      const res = await fetch(url.toString(), { headers: { Authorization: "Bearer " + accessToken } });
-      if (!res.ok) throw new Error("YouTube API error " + res.status);
-      return res.json();
-    }
-
-    async function loadMyPlaylists() {
-      const list = $("mine-list");
-      list.innerHTML = "";
-      setStatus("Loading your playlists…");
-      try {
-        const data = await ytGet("playlists", { part: "snippet,contentDetails", mine: true, maxResults: 50 });
-        setStatus("");
-        for (const it of (data.items || [])) {
-          const id = it.id;
-          const thumb = (it.snippet && it.snippet.thumbnails && (it.snippet.thumbnails.medium || it.snippet.thumbnails.default) || {}).url;
-          const count = (it.contentDetails && it.contentDetails.itemCount) || "?";
-          list.appendChild(pickRow({
-            kind: "playlist", id,
-            title: (it.snippet && it.snippet.title) || "Playlist",
-            subtitle: `${count} videos`, thumb,
-          }));
-        }
-        if (!list.children.length) setStatus("You don't have any playlists yet.");
-      } catch (e) { setStatus("Couldn't load your playlists."); }
-    }
-
-    async function loadMyLiked() {
-      const list = $("liked-list");
-      list.innerHTML = "";
-      setStatus("Loading your liked videos…");
-      try {
-        const data = await ytGet("videos", { part: "snippet", myRating: "like", maxResults: 50 });
-        setStatus("");
-        for (const it of (data.items || [])) {
-          const id = it.id;
-          const thumb = (it.snippet && it.snippet.thumbnails && (it.snippet.thumbnails.medium || it.snippet.thumbnails.default) || {}).url;
-          list.appendChild(pickRow({
-            kind: "video", id,
-            title: (it.snippet && it.snippet.title) || "YouTube video",
-            subtitle: (it.snippet && it.snippet.channelTitle) || "", thumb,
-          }));
-        }
-        if (!list.children.length) setStatus("You haven't liked any videos yet.");
-      } catch (e) { setStatus("Couldn't load your liked videos."); }
-    }
-
-    function pickRow({ kind, id, title, subtitle, thumb }) {
-      const li = document.createElement("li");
-      const k = key(kind, id);
-      li.innerHTML = `
-        <div class="thumbmini"></div>
-        <div class="info"><div class="t"></div><div class="c"></div></div>
-        <button class="add">Add</button>`;
-      if (thumb) li.querySelector(".thumbmini").style.backgroundImage = `url("${thumb}")`;
-      li.querySelector(".t").textContent = title;
-      li.querySelector(".c").textContent = kind === "playlist" ? "Playlist · " + (subtitle || "") : (subtitle || "");
-      const btn = li.querySelector(".add");
-      const sync = () => {
-        const on = selected.has(k);
-        btn.classList.toggle("on", on);
-        btn.textContent = on ? "Added ✓" : "Add";
-      };
-      btn.onclick = () => {
-        if (selected.has(k)) selected.delete(k);
-        else selected.set(k, { kind, id, title, source: "oauth" });
-        sync(); updateTray();
-      };
-      sync();
-      return li;
-    }
   </script>
 </body>
 </html>
